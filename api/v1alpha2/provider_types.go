@@ -123,6 +123,11 @@ type ManagerSpec struct {
 	// in as container args to the provider's controller manager.
 	// Controller Manager flag is --feature-gates.
 	FeatureGates map[string]bool `json:"featureGates,omitempty"`
+
+	// CRDPattern is a regular expression that matches the CRDs that the provider
+	// is expected to manage.
+	// +optional
+	CRDPattern string `json:"crdPattern,omitempty"`
 }
 
 // DeploymentSpec defines the properties that can be enabled on the Deployment for the provider.
