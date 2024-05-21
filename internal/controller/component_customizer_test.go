@@ -575,6 +575,7 @@ func TestCustomizeMultipleDeployment(t *testing.T) {
 	tests := []struct {
 		name                     string
 		nonManagerDeploymentName string
+		shouldCustomize          bool
 	}{
 		{
 			name:                     "name without suffix and prefix",
@@ -587,6 +588,11 @@ func TestCustomizeMultipleDeployment(t *testing.T) {
 		{
 			name:                     "name with suffix",
 			nonManagerDeploymentName: "non-manager-controller-manager",
+		},
+		{
+			name:                     "name with azureserviceoperator controller-manager",
+			nonManagerDeploymentName: "azureserviceoperator-controller-manager",
+			shouldCustomize:          true,
 		},
 		{
 			name:                     "empty name",
@@ -603,6 +609,17 @@ func TestCustomizeMultipleDeployment(t *testing.T) {
 				},
 				Spec: appsv1.DeploymentSpec{
 					Replicas: ptr.To(int32(3)),
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name:  "manager",
+									Image: "registry.k8s.io/a-manager:1.6.2",
+									Args:  []string{},
+								},
+							},
+						},
+					},
 				},
 			}
 
@@ -628,6 +645,9 @@ func TestCustomizeMultipleDeployment(t *testing.T) {
 					ProviderSpec: operatorv1.ProviderSpec{
 						Deployment: &operatorv1.DeploymentSpec{
 							Replicas: ptr.To(10),
+						},
+						Manager: &operatorv1.ManagerSpec{
+							CRDPattern: ptr.To(".*"),
 						},
 					},
 				},
@@ -657,8 +677,18 @@ func TestCustomizeMultipleDeployment(t *testing.T) {
 				t.Errorf("expected 10 replicas, got %d", *managerDepl.Spec.Replicas)
 			}
 
+			if tc.shouldCustomize {
+				// non-manager container should have been customized
+				container := findManagerContainer(&nonManagerDepl.Spec)
+				if container == nil {
+					t.Error("expected container to be found")
+				} else if container.Args != nil && container.Args[0] != "--crd-pattern=.*" {
+					t.Errorf("expected --crd-pattern=.*, got %s", container.Args[0])
+				}
+			}
+
 			// non-manager deployment should not have been customized
-			if *nonManagerDepl.Spec.Replicas != 3 {
+			if *nonManagerDepl.Spec.Replicas != 3 && !tc.shouldCustomize {
 				t.Errorf("expected 3 replicas, got %d", *nonManagerDepl.Spec.Replicas)
 			}
 		})

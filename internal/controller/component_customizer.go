@@ -73,7 +73,13 @@ func customizeObjectsFn(provider operatorv1.GenericProvider) func(objs []unstruc
 					}))
 			}
 
+			//nolint:nestif
 			if o.GetKind() == deploymentKind {
+				d := &appsv1.Deployment{}
+				if err := scheme.Scheme.Convert(&o, d, nil); err != nil {
+					return nil, err
+				}
+
 				// We need to skip the deployment customization if there are several deployments available
 				// and the deployment name doesn't follow "ca*-controller-manager" pattern.
 				// Currently it is applicable only for CAPZ manifests, which contain 2 deployments:
@@ -81,18 +87,20 @@ func customizeObjectsFn(provider operatorv1.GenericProvider) func(objs []unstruc
 				// This is a temporary fix until CAPI provides a contract to distinguish provider deployments.
 				// TODO: replace this check and just compare labels when CAPI provides the contract for that.
 				if isMultipleDeployments && !isProviderManagerDeploymentName(o.GetName()) {
-					results = append(results, o)
-
-					continue
-				}
-
-				d := &appsv1.Deployment{}
-				if err := scheme.Scheme.Convert(&o, d, nil); err != nil {
-					return nil, err
-				}
-
-				if err := customizeDeployment(provider.GetSpec(), d); err != nil {
-					return nil, err
+					// If the deployment is azureserviceoperator-controller-manager, customize the deployment
+					// to support configurable CRD Pattern. This is to enable installing additional ASO CRDs.
+					if strings.HasPrefix(o.GetName(), "azureserviceoperator") {
+						if err := customizeASODeployment(provider.GetSpec(), d); err != nil {
+							return nil, err
+						}
+					} else {
+						results = append(results, o)
+						continue
+					}
+				} else {
+					if err := customizeDeployment(provider.GetSpec(), d); err != nil {
+						return nil, err
+					}
 				}
 
 				if err := scheme.Scheme.Convert(d, &o, nil); err != nil {
@@ -122,6 +130,21 @@ func customizeDeployment(pSpec operatorv1.ProviderSpec, d *appsv1.Deployment) er
 		}
 
 		customizeManagerContainer(pSpec.Manager, container)
+	}
+
+	return nil
+}
+
+// customizeASODeployment customize ASO provider deployment base on provider spec input.
+func customizeASODeployment(pSpec operatorv1.ProviderSpec, d *appsv1.Deployment) error {
+	// Run the customizeManagerContainer after, so it overrides anything in the deploymentSpec.
+	if pSpec.Manager != nil {
+		container := findManagerContainer(&d.Spec)
+		if container == nil {
+			return fmt.Errorf("cannot find %q container in deployment %q", managerContainerName, d.Name)
+		}
+
+		customizeASOManagerContainer(pSpec.Manager, container)
 	}
 
 	return nil
@@ -250,6 +273,13 @@ func customizeManagerContainer(mSpec *operatorv1.ManagerSpec, c *corev1.Containe
 
 		sort.Strings(fgValue)
 		c.Args = setArgs(c.Args, "--feature-gates", strings.Join(fgValue, ","))
+	}
+}
+
+// customizeManagerContainer customize ASO manager container base on provider spec input.
+func customizeASOManagerContainer(mSpec *operatorv1.ManagerSpec, c *corev1.Container) {
+	if mSpec.CRDPattern != nil {
+		c.Args = setArgs(c.Args, "--crd-pattern", *mSpec.CRDPattern)
 	}
 }
 

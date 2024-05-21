@@ -2956,6 +2956,11 @@ spec:
                         description: RecoverPanic indicates if panics should be recovered.
                         type: boolean
                     type: object
+                  crdPattern:
+                    description: |-
+                      CRDPattern is a regular expression that matches the CRDs that the provider
+                      is expected to manage.
+                    type: string
                   featureGates:
                     additionalProperties:
                       type: boolean

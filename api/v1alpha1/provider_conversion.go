@@ -46,6 +46,9 @@ func (src *BootstrapProvider) ConvertTo(dstRaw conversion.Hub) error {
 	}
 
 	dst.Spec.ManifestPatches = restored.Spec.ManifestPatches
+	if restored.Spec.Manager != nil {
+		dst.Spec.Manager.CRDPattern = restored.Spec.Manager.CRDPattern
+	}
 
 	return nil
 }
@@ -107,6 +110,9 @@ func (src *ControlPlaneProvider) ConvertTo(dstRaw conversion.Hub) error {
 	}
 
 	dst.Spec.ManifestPatches = restored.Spec.ManifestPatches
+	if restored.Spec.Manager != nil {
+		dst.Spec.Manager.CRDPattern = restored.Spec.Manager.CRDPattern
+	}
 
 	return nil
 }
@@ -168,6 +174,9 @@ func (src *CoreProvider) ConvertTo(dstRaw conversion.Hub) error {
 	}
 
 	dst.Spec.ManifestPatches = restored.Spec.ManifestPatches
+	if restored.Spec.Manager != nil {
+		dst.Spec.Manager.CRDPattern = restored.Spec.Manager.CRDPattern
+	}
 
 	return nil
 }
@@ -229,6 +238,9 @@ func (src *InfrastructureProvider) ConvertTo(dstRaw conversion.Hub) error {
 	}
 
 	dst.Spec.ManifestPatches = restored.Spec.ManifestPatches
+	if restored.Spec.Manager != nil {
+		dst.Spec.Manager.CRDPattern = restored.Spec.Manager.CRDPattern
+	}
 
 	return nil
 }
