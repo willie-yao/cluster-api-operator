@@ -27,6 +27,7 @@ metadata:
   annotations:
     "helm.sh/hook": "post-install"
     "helm.sh/hook-weight": "1"
+    "argocd.argoproj.io/sync-wave": "1"
   name: {{ $coreNamespace }}
 ---
 apiVersion: operator.cluster.x-k8s.io/v1alpha2
@@ -37,6 +38,7 @@ metadata:
   annotations:
     "helm.sh/hook": "post-install"
     "helm.sh/hook-weight": "2"
+    "argocd.argoproj.io/sync-wave": "1"
 {{- if or $coreVersion $.Values.configSecret.name }}
 spec:
 {{- end}}
