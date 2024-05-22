@@ -30,6 +30,23 @@ metadata:
     "helm.sh/hook-weight": "1"
   name: {{ $infrastructureNamespace }}
 ---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    "helm.sh/hook": "post-install"
+    "helm.sh/hook-weight": "-1000"
+  name: sleep-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: sleeper
+        image: alpine
+        command: ["sleep", "120"]
+      restartPolicy: Never
+  backoffLimit: 4
+---
 apiVersion: operator.cluster.x-k8s.io/v1alpha2
 kind: InfrastructureProvider
 metadata:
@@ -38,7 +55,7 @@ metadata:
   annotations:
     "helm.sh/hook": "post-install"
     "helm.sh/hook-weight": "2"
-{{- if or $infrastructureVersion $.Values.configSecret.name }}
+{{- if or $infrastructureVersion $.Values.configSecret.name $.Values.manager }}
 spec:
 {{- end }}
 {{- if $infrastructureVersion }}
@@ -46,7 +63,7 @@ spec:
 {{- end }}
 {{- if $.Values.manager }}
   manager:
-{{- if hasKey $.Values.manager.featureGates $infrastructureName }}
+{{- if and (kindIs "map" $.Values.manager.featureGates) (hasKey $.Values.manager.featureGates $infrastructureName) }}
 {{- range $key, $value := $.Values.manager.featureGates }}
   {{- if eq $key $infrastructureName }}
     featureGates:
