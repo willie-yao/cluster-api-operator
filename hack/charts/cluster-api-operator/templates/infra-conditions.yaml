@@ -20,7 +20,7 @@ metadata:
   annotations:
     "helm.sh/hook": "post-install"
     "helm.sh/hook-weight": "2"
-    "argocd.argoproj.io/sync-wave": "1"
+    "argocd.argoproj.io/sync-wave": "2"
 {{- with .Values.configSecret }}
 spec:
   configSecret:
@@ -50,7 +50,7 @@ metadata:
   annotations:
     "helm.sh/hook": "post-install"
     "helm.sh/hook-weight": "2"
-    "argocd.argoproj.io/sync-wave": "1"
+    "argocd.argoproj.io/sync-wave": "2"
 {{- with .Values.configSecret }}
 spec:
   configSecret:
