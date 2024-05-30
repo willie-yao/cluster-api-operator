@@ -18,7 +18,7 @@ leaderElection:
   enabled: true
 image:
   manager:
-    repository: gcr.io/k8s-staging-capi-operator/cluster-api-operator
+    repository: quillie/cluster-api-operator-amd64
     tag: dev
     pullPolicy: IfNotPresent
 env:

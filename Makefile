@@ -124,11 +124,11 @@ ARCH ?= amd64
 ALL_ARCH = amd64 arm arm64 ppc64le s390x
 
 # Define Docker related variables. Releases should modify and double check these vars.
-STAGING_REGISTRY ?= gcr.io/k8s-staging-capi-operator
+STAGING_REGISTRY ?= docker.io/quillie
 STAGING_BUCKET ?= artifacts.k8s-staging-capi-operator.appspot.com
 
 REGISTRY ?= $(STAGING_REGISTRY)
-PROD_REGISTRY ?= registry.k8s.io/capi-operator
+PROD_REGISTRY ?= docker.io/quillie
 
 # Image name
 IMAGE_NAME ?= cluster-api-operator
