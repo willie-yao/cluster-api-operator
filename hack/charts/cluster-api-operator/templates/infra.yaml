@@ -58,6 +58,9 @@ spec:
   {{- end }}
 {{- end }}
 {{- end }}
+{{- if $.Values.manager.crdPattern }}
+    crdPattern: {{ $.Values.manager.crdPattern }}
+{{- end }}
 {{- end }}
 {{- if $.Values.configSecret.name }}
   configSecret:
