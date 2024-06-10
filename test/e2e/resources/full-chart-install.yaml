@@ -18247,3 +18247,30 @@ webhooks:
     resources:
     - runtimeextensionproviders
   sideEffects: None
+---
+# Source: cluster-api-operator/templates/core.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: webhook-check
+  annotations:
+    "helm.sh/hook": "post-install"
+    "helm.sh/hook-weight": "0"
+    "argocd.argoproj.io/sync-wave": "0"
+spec:
+  template:
+    spec:
+      containers:
+      - name: curl
+        image: curlimages/curl
+        command:
+        - sh
+        - -c
+        - |
+          until curl -k -sf https://capi-operator-webhook-service.capi-operator-system.svc:443/validate-operator-cluster-x-k8s-io-v1alpha2-coreprovider; do
+            echo "Webhook not ready, retrying in 5 seconds..."
+            sleep 5
+          done
+          echo "Webhook is ready!"
+      restartPolicy: OnFailure
+  backoffLimit: 4
